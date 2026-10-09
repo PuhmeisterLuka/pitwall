@@ -19,9 +19,11 @@ keeps serving when either side is slow, rate limited or down.
 ## How it works
 
 ```
-Jolpica-F1 ─┐                                                ┌─ JSON API
-            ├─ JsonClient ── Cache ── normalize ── service ──┤
-OpenF1 ─────┘                                                └─ dashboard
+Jolpica-F1 ── Jolpica source ─┐                                 ┌─ JSON API
+                              ├─ normalize ── service ──────────┤
+OpenF1 ────── OpenF1 source ──┘                                 └─ dashboard
+
+each source = JsonClient (rate limit, retries) + shared Cache (SQLite)
 ```
 
 - **JsonClient**: one per upstream. Client-side rate limiting against the
@@ -30,6 +32,22 @@ OpenF1 ─────┘                                                └─ 
 - **Cache**: SQLite, keyed by request. Fresh entries are served directly,
   concurrent misses share one upstream call, and a failed refresh falls back to
   the last good copy, flagged as `stale`.
+- **Sources**: one class per API that absorbs its quirks (Jolpica's `MRData`
+  envelope and 100-row pages, OpenF1's 404 for "no rows") and rejects payloads
+  with an unexpected shape. Live data is cached for 15 minutes; data for
+  finished events is marked settled and kept for 30 days.
+
+## Configuration
+
+Every setting has a default and can be overridden with an environment variable.
+
+| Variable | Default |
+| --- | --- |
+| `PITWALL_CACHE_PATH` | `.cache/pitwall.sqlite3` |
+| `PITWALL_TIMEOUT_S` | `10` |
+| `PITWALL_MAX_RETRIES` | `3` |
+| `PITWALL_JOLPICA_URL` | `https://api.jolpi.ca/ergast/f1` |
+| `PITWALL_OPENF1_URL` | `https://api.openf1.org/v1` |
 
 ## Roadmap
 
