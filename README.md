@@ -37,6 +37,26 @@ each source = JsonClient (rate limit, retries) + shared Cache (SQLite)
   with an unexpected shape. Live data is cached for 15 minutes; data for
   finished events is marked settled and kept for 30 days.
 
+## Normalization
+
+Each field comes from the source that is authoritative for it:
+
+| Field | From | Why |
+| --- | --- | --- |
+| Classification, outcome, points, grid, race time | Jolpica | The official result, including post-race penalties |
+| Start time (UTC), session | OpenF1 | Jolpica pairs the local race date with a UTC time, so Las Vegas 2024 comes out a day early |
+| Team colour, headshot, stints, pit stops, lap times, weather | OpenF1 | Jolpica does not have them |
+
+- A race is paired with the nearest OpenF1 race session within 36 hours.
+  Cancelled sessions (Imola 2023) are skipped.
+- Drivers are matched by car number, then by three-letter code. Anyone left over
+  on either side is listed in the report's `notes` instead of being dropped.
+- The outcome is read from the status text before the position, because older
+  data gives some disqualifications a plain position (Russell, Spa 2024).
+- Gaps and laps down are only computed for classified finishers, so a
+  disqualified driver who crossed the line first never shows a negative gap.
+- OpenF1 starts in 2023. Earlier races are served from Jolpica alone.
+
 ## Configuration
 
 Every setting has a default and can be overridden with an environment variable.
