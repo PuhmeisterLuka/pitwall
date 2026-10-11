@@ -1,17 +1,27 @@
-"""HTTP API: three read-only views and a health check. Run with `uvicorn pitwall.api:app`."""
+"""HTTP API (three read-only views and a health check) plus the dashboard that reads it.
+
+Run with `uvicorn pitwall.api:app`.
+"""
 
 import math
+import mimetypes
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager, nullcontext
+from pathlib import Path as FilePath
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, FastAPI, Path, Request
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from pitwall.config import Settings
 from pitwall.errors import UpstreamError
 from pitwall.service import NotFound, RaceService, RaceView, SeasonView, StandingsView
 from pitwall.sources import Sources, open_sources
+
+DASHBOARD = FilePath(__file__).parent / "static"
+# Some Windows registries map .js to text/plain, and browsers refuse to run modules served that way.
+mimetypes.add_type("text/javascript", ".js")
 
 Season = Annotated[int, Path(ge=1950, le=2100)]
 Round = Annotated[int, Path(ge=1, le=30)]
@@ -80,6 +90,8 @@ def create_app(settings: Settings | None = None, *, sources: Sources | None = No
     app.include_router(router)
     app.add_exception_handler(UpstreamError, upstream_failed)
     app.add_exception_handler(NotFound, not_found)
+    # Mounted last, so the /api routes match first.
+    app.mount("/", StaticFiles(directory=DASHBOARD, html=True), name="dashboard")
     return app
 
 

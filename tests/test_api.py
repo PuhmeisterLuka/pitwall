@@ -79,3 +79,13 @@ async def test_unusable_upstream_answer_is_502(client, spa_sources):
 )
 async def test_invalid_paths_are_422(client, path):
     assert (await client.get(path)).status_code == 422
+
+
+async def test_dashboard_is_served_next_to_the_api(client):
+    page = await client.get("/")
+    script = await client.get("/app.js")
+
+    assert page.status_code == 200
+    assert "<title>pitwall</title>" in page.text
+    assert script.headers["content-type"].startswith("text/javascript")
+    assert (await client.get("/api/health")).json() == {"status": "ok"}
