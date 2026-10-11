@@ -1,4 +1,4 @@
-"""Resilient async JSON client, one instance per upstream."""
+"""The HTTP layer both sources share."""
 
 import asyncio
 import logging

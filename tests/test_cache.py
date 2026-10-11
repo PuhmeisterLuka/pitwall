@@ -10,7 +10,7 @@ pytestmark = pytest.mark.anyio
 
 
 class Upstream:
-    """Fake fetch that counts calls and can be switched to failing."""
+    """Fake fetch that counts its calls. Set `error` to make it fail."""
 
     def __init__(self) -> None:
         self.calls = 0

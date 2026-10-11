@@ -57,7 +57,7 @@ class Stint:
 class PitStop:
     lap: int
     lane_s: float | None  # pit entry to pit exit
-    stop_s: float | None  # stationary time, recent seasons only
+    stop_s: float | None  # stationary time; OpenF1 has it for recent seasons
 
 
 @dataclass(frozen=True, slots=True)
@@ -71,7 +71,7 @@ class Entry:
     grid: int | None  # None for a pit lane start
     laps_completed: int
     points: float
-    race_time_s: float | None  # classified finishers on the lead lap only
+    race_time_s: float | None  # set for classified finishers on the lead lap
     fastest_lap: FastestLap | None
     gap_s: float | None = None
     laps_down: int | None = None
@@ -98,7 +98,7 @@ class RaceReport:
     event: Event
     entries: tuple[Entry, ...]
     weather: Weather | None = None
-    notes: tuple[str, ...] = ()  # what could not be merged, in plain words
+    notes: tuple[str, ...] = ()  # what the merge couldn't line up, in plain words
 
 
 @dataclass(frozen=True, slots=True)

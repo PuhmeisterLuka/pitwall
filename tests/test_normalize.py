@@ -1,7 +1,5 @@
 import datetime as dt
-import json
 from dataclasses import replace
-from pathlib import Path
 
 import pytest
 
@@ -16,14 +14,6 @@ from pitwall.normalize import (
 )
 from pitwall.normalize.jolpica import driver_code, parse_outcome
 from pitwall.normalize.openf1 import lap_series, summarize_weather
-
-FIXTURES = Path(__file__).parent / "fixtures"
-
-
-@pytest.fixture(scope="module")
-def spa() -> dict:
-    """Trimmed real responses for the 2024 Belgian GP from both APIs."""
-    return json.loads((FIXTURES / "spa_2024.json").read_text(encoding="utf-8"))
 
 
 def timing(spa: dict, **changes) -> SessionData:
@@ -93,7 +83,7 @@ def test_classification_follows_the_official_result(spa):
 
 
 def test_disqualified_driver_keeps_no_time(spa):
-    # Russell crossed the line first but was disqualified; Jolpica still lists his time.
+    # Russell crossed the line first and the stewards disqualified him; Jolpica keeps his time.
     russell = entry(build_report(spa["jolpica_race"]), "RUS")
 
     assert russell.outcome is Outcome.DISQUALIFIED
@@ -116,7 +106,7 @@ def test_retirement(spa):
         ("1", "Finished", Outcome.FINISHED),
         ("13", "Lapped", Outcome.FINISHED),
         ("14", "+1 Lap", Outcome.FINISHED),
-        ("10", "Engine", Outcome.FINISHED),  # stopped, but far enough to be classified
+        ("10", "Engine", Outcome.FINISHED),  # stopped late enough to count as classified
         ("20", "Disqualified", Outcome.DISQUALIFIED),  # how 2024 data marks it
         ("D", "Disqualified", Outcome.DISQUALIFIED),
         ("R", "Collision", Outcome.RETIRED),
@@ -230,7 +220,7 @@ def test_unmatched_drivers_are_noted(spa):
 
 
 def test_empty_openf1_datasets_are_noted(spa):
-    # OpenF1 has no pit stops for early 2023 races: that is missing data, not zero stops.
+    # OpenF1 has no pit stops for early 2023 races, and the report has to say so.
     report = build_report(spa["jolpica_race"], timing(spa, pit_stops=[], weather=[]))
     winner = entry(report, "HAM")
 

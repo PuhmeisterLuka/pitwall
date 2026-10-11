@@ -17,7 +17,7 @@ Fetch = Callable[[], Awaitable[Any]]
 
 @dataclass(frozen=True)
 class Cached:
-    """A cached value, how it was served, and when it was fetched (epoch seconds)."""
+    """A value, how the cache served it, and when it came from upstream (epoch seconds)."""
 
     value: Any
     status: Literal["hit", "miss", "stale"]
@@ -25,7 +25,7 @@ class Cached:
 
 
 def cache_key(source: str, path: str, params: Mapping[str, Any] | None = None) -> str:
-    """Same request, same key, whatever the parameter order."""
+    """Build a key that ignores parameter order."""
     query = "&".join(f"{k}={v}" for k, v in sorted((params or {}).items()))
     return f"{source}:{path}?{query}"
 

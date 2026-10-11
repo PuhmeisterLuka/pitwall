@@ -132,6 +132,13 @@ async def test_openf1_filters_by_session(connect):
     assert router.requests[0].url.params["session_key"] == "9574"
 
 
+async def test_openf1_live_session_lockout_is_explained(connect):
+    openf1, _ = connect(OpenF1, {"/laps": 401})
+    with pytest.raises(UpstreamUnavailable, match="while an F1 session is live") as caught:
+        await openf1.laps(9574)
+    assert caught.value.status == 401
+
+
 async def test_openf1_rejects_non_list_payloads(connect):
     openf1, _ = connect(OpenF1, {"/laps": {"detail": "oops"}})
     with pytest.raises(UpstreamBadResponse, match="expected a list"):

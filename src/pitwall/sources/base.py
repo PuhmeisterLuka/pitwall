@@ -8,7 +8,7 @@ from pitwall.errors import UpstreamBadResponse
 from pitwall.http import JsonClient, Params
 
 LIVE_TTL_S = 15 * 60
-SETTLED_TTL_S = 30 * 86_400  # finished events only change on rare corrections
+SETTLED_TTL_S = 30 * 86_400  # a finished race changes when the stewards correct it, which is rare
 
 Extract = Callable[[Any], Any]
 
@@ -35,7 +35,7 @@ class Source:
         settled: bool,
         extract: Extract = as_is,
     ) -> Cached:
-        """Fetch through the cache. Settled data (finished events) is kept far longer."""
+        """Fetch through the cache: 15 minutes for live data, 30 days once an event has settled."""
 
         async def fetch() -> Any:
             payload = await self._request(path, params)

@@ -23,7 +23,7 @@ class Sources:
 
 @asynccontextmanager
 async def open_sources(settings: Settings) -> AsyncIterator[Sources]:
-    """Both sources on one shared cache, all closed on exit."""
+    """Open both sources on one shared cache and close them all on exit."""
     cache = Cache(settings.cache_path)
     jolpica = Jolpica(_client(Jolpica, settings.jolpica_url, settings), cache)
     openf1 = OpenF1(_client(OpenF1, settings.openf1_url, settings), cache)

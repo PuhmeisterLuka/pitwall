@@ -19,7 +19,7 @@ def build_calendar(races: list[dict], sessions: list[dict]) -> list[Event]:
 
 
 def build_report(race: dict, timing: SessionData | None = None) -> RaceReport:
-    """The official classification, enriched with OpenF1 timing when there is some."""
+    """The official classification plus whatever timing OpenF1 has for it."""
     event = parse_event(race)
     entries = parse_classification(race)
     if timing is None:
@@ -49,19 +49,19 @@ def match_session(event: Event, sessions: list[dict]) -> dict | None:
 
 
 def attach_session(event: Event, session: dict | None) -> Event:
-    """Prefer OpenF1's start time: it is a true UTC instant."""
+    """Use OpenF1's start time; Jolpica's can be a day off."""
     if session is None:
         return event
     return replace(event, starts_at=utc(session["date_start"]), session_key=session["session_key"])
 
 
 def coverage_notes(timing: SessionData) -> list[str]:
-    """Name the empty OpenF1 datasets, so missing data never reads as 'nothing happened'."""
+    """List the empty OpenF1 datasets, so a missing pit list doesn't read as no stops."""
     datasets = {
         "drivers": timing.drivers,
         "lap times": timing.laps,
         "tyre stints": timing.stints,
-        "pit stops": timing.pit_stops,  # OpenF1 only has these from mid-2023
+        "pit stops": timing.pit_stops,  # OpenF1 has these from mid-2023 on
         "weather": timing.weather,
     }
     return [f"OpenF1 has no {name} for this race" for name, rows in datasets.items() if not rows]

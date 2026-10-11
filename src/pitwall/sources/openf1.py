@@ -3,9 +3,11 @@
 from typing import Any
 
 from pitwall.cache import Cached
-from pitwall.errors import UpstreamBadResponse, UpstreamNotFound
+from pitwall.errors import UpstreamBadResponse, UpstreamError, UpstreamNotFound, UpstreamUnavailable
 from pitwall.http import Params
 from pitwall.sources.base import Source
+
+LIVE_LOCKOUT = "locked to free users while an F1 session is live"
 
 
 class OpenF1(Source):
@@ -28,9 +30,6 @@ class OpenF1(Source):
     async def pit_stops(self, session_key: int, *, settled: bool = False) -> Cached:
         return await self._session_rows("/pit", session_key, settled)
 
-    async def results(self, session_key: int, *, settled: bool = False) -> Cached:
-        return await self._session_rows("/session_result", session_key, settled)
-
     async def weather(self, session_key: int, *, settled: bool = False) -> Cached:
         return await self._session_rows("/weather", session_key, settled)
 
@@ -42,6 +41,11 @@ class OpenF1(Source):
             rows = await self._http.get(path, params)
         except UpstreamNotFound:
             return []  # OpenF1 answers an empty query with 404
+        except UpstreamError as error:
+            if error.status != 401:
+                raise
+            # While a session is live, OpenF1 locks free users out of everything, past races too.
+            raise UpstreamUnavailable(self.name, LIVE_LOCKOUT, status=401) from error
         if not isinstance(rows, list):
             raise UpstreamBadResponse(self.name, f"expected a list from {path}")
         return rows

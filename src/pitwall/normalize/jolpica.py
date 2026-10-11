@@ -7,7 +7,7 @@ from dataclasses import replace
 from pitwall.models import Driver, Entry, Event, FastestLap, Outcome, Standing
 from pitwall.normalize.units import clock_seconds, optional_int, utc
 
-# Checked first: older seasons give some of these a plain finishing position.
+# Read before the position: older seasons give some of these a plain finishing position.
 STATUS_OUTCOMES = {
     "Disqualified": Outcome.DISQUALIFIED,
     "Not classified": Outcome.NOT_CLASSIFIED,
