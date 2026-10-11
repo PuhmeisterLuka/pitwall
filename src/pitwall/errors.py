@@ -16,6 +16,7 @@ class UpstreamError(Exception):
     ) -> None:
         super().__init__(f"{source}: {message}")
         self.source = source
+        self.message = message  # without the source prefix, for callers that show it
         self.status = status
         self.retry_after = retry_after
 
@@ -37,4 +38,4 @@ class UpstreamUnavailable(UpstreamError):
 
 
 class UpstreamBadResponse(UpstreamError):
-    """The upstream answered, but not with usable JSON."""
+    """The upstream sent back something that isn't usable JSON."""
